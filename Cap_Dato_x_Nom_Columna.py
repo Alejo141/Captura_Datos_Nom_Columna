@@ -3,6 +3,9 @@ import pandas as pd
 from io import BytesIO
 
 def procesar_archivo(file):
+    # Obtener el nombre del archivo
+    nombre_archivo = file.name
+    
     # Cargar todas las hojas del archivo Excel
     xls = pd.ExcelFile(file)
     
@@ -41,8 +44,11 @@ def procesar_archivo(file):
 
     df_filtrado = df[columnas_presentes]
 
-    # Reemplazar valores vacíos o nulos con "NA"
+    # Reemplazar valores vacíos o nulos con "NA" (excepto en "factura")
     df_filtrado.fillna("NA", inplace=True)
+
+    # Eliminar filas donde "factura" esté vacía
+    df_filtrado = df_filtrado[df_filtrado["factura"].notna() & (df_filtrado["factura"] != "NA") & (df_filtrado["factura"].str.strip() != "")]
 
     # Eliminar guiones en la columna "Factura"
     if "factura" in df_filtrado.columns:
@@ -68,6 +74,9 @@ def procesar_archivo(file):
         # Eliminar columna original "Mes de Cobro"
         df_filtrado.drop(columns=["mes de cobro"], inplace=True)
 
+    # Agregar una nueva columna al inicio con el nombre del archivo
+    df_filtrado.insert(0, "nombre_archivo", nombre_archivo)
+
     return df_filtrado
 
 def generar_csv(df):
@@ -80,7 +89,7 @@ def generar_csv(df):
 st.set_page_config(page_title="Filtro de Columnas", page_icon="📂", layout="centered")
 st.title("📂 Filtro de Columnas en Excel")
 
-st.markdown("Sube un archivo Excel, extrae columnas específicas de las hojas 'Cartera' y 'Cartera Escuelas', divide 'Mes de Cobro' en mes y año, asigna 'NA' a valores vacíos y elimina guiones de 'Factura'.")
+st.markdown("Sube un archivo Excel, extrae columnas específicas de las hojas 'Cartera' y 'Cartera Escuelas', divide 'Mes de Cobro' en mes y año, **excluye filas sin 'Factura'**, elimina guiones en 'Factura' y agrega el nombre del archivo.")
 
 archivo = st.file_uploader("Cargar archivo Excel", type=["xlsx"])
 
@@ -91,6 +100,6 @@ if archivo is not None:
         st.dataframe(df_filtrado)  # Muestra la tabla con las columnas seleccionadas
         
         csv = generar_csv(df_filtrado)
-        st.download_button(label="📥 Descargar CSV", data=csv, file_name="archivo_filtrado.csv", mime="text/csv")
+        st.download_button(label="📥 Descargar CSV", data=csv, file_name="conso_cartera_xra_db.csv", mime="text/csv")
     except Exception as e:
         st.error(f"Error: {e}")
