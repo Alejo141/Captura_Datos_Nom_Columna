@@ -4,7 +4,7 @@ from io import BytesIO
 
 def procesar_archivo(file):
     df = pd.read_excel(file)
-    columnas_deseadas = ["Nombre", "Edad", "Ciudad"]  # Modifica según necesidad
+    columnas_deseadas = ["Identificación", "Factura", "PROYECTO", "Saldo Factura", "Mes de Cobro"]  # Modifica según necesidad
     df_filtrado = df[columnas_deseadas]
     return df_filtrado
 
