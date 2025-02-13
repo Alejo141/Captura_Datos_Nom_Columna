@@ -23,7 +23,7 @@ def procesar_archivo(file):
     df.columns = df.columns.str.strip().str.lower()
 
     # Definir columnas a extraer (ajustar nombres en minúsculas)
-    columnas_deseadas = ["identificación", "factura", "proyecto", "saldo factura", "mes de cobro"]
+    columnas_deseadas = ["identificación", "factura", "saldo factura", "mes de cobro"]
 
     # Filtrar solo columnas que existen en el archivo
     columnas_presentes = [col for col in columnas_deseadas if col in df.columns]
