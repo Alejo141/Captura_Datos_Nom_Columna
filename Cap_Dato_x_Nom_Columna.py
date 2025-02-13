@@ -32,6 +32,27 @@ def procesar_archivo(file):
         raise ValueError("Ninguna de las columnas esperadas está en el archivo.")
 
     df_filtrado = df[columnas_presentes]
+
+    # Convertir "Mes de Cobro" en mes (numérico) y año
+    if "mes de cobro" in df_filtrado.columns:
+        df_filtrado["mes de cobro"] = df_filtrado["mes de cobro"].astype(str)  # Asegurar que es texto
+        df_filtrado[["mes", "año"]] = df_filtrado["mes de cobro"].str.split(" ", expand=True)
+        
+        # Diccionario de meses para conversión a número
+        meses_dict = {
+            "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
+            "julio": 7, "agosto": 8, "septiembre": 9, "octubre": 10, "noviembre": 11, "diciembre": 12
+        }
+        
+        # Convertir nombre del mes a número
+        df_filtrado["mes"] = df_filtrado["mes"].str.lower().map(meses_dict)
+        
+        # Convertir año a número
+        df_filtrado["año"] = pd.to_numeric(df_filtrado["año"], errors='coerce')
+
+        # Eliminar columna original "Mes de Cobro"
+        df_filtrado.drop(columns=["mes de cobro"], inplace=True)
+
     return df_filtrado
 
 def generar_csv(df):
@@ -44,7 +65,7 @@ def generar_csv(df):
 st.set_page_config(page_title="Filtro de Columnas", page_icon="📂", layout="centered")
 st.title("📂 Filtro de Columnas en Excel")
 
-st.markdown("Sube un archivo Excel, extrae columnas específicas de las hojas 'Cartera' y 'Cartera Escuelas' y descarga el CSV resultante.")
+st.markdown("Sube un archivo Excel, extrae columnas específicas de las hojas 'Cartera' y 'Cartera Escuelas', divide 'Mes de Cobro' en mes y año, y descarga el CSV resultante.")
 
 archivo = st.file_uploader("Cargar archivo Excel", type=["xlsx"])
 
