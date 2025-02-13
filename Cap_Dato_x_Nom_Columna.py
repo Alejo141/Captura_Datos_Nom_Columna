@@ -16,13 +16,21 @@ def procesar_archivo(file):
         raise ValueError("El archivo no contiene las hojas 'Cartera' o 'Cartera Escuelas'.")
 
     # Leer y combinar los datos de las hojas deseadas
-    df_list = [pd.read_excel(xls, sheet_name=hoja, dtype=str) for hoja in hojas_presentes]
+    df_list = []
+    for hoja in hojas_presentes:
+        df_temp = pd.read_excel(xls, sheet_name=hoja, dtype=str)
+        
+        # Normalizar nombres de columnas
+        df_temp.columns = df_temp.columns.str.strip().str.lower()
+        
+        # Renombrar columnas duplicadas
+        df_temp = df_temp.loc[:, ~df_temp.columns.duplicated()]
+        
+        df_list.append(df_temp)
+    
     df = pd.concat(df_list, ignore_index=True)
 
-    # Normalizar nombres de columnas (eliminar espacios extra, convertir a minúsculas)
-    df.columns = df.columns.str.strip().str.lower()
-
-    # Definir columnas a extraer (ajustar nombres en minúsculas)
+    # Definir columnas a extraer
     columnas_deseadas = ["identificación", "factura", "proyecto", "saldo factura", "mes de cobro"]
 
     # Filtrar solo columnas que existen en el archivo
