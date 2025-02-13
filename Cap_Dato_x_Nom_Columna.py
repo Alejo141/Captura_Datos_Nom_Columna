@@ -16,14 +16,14 @@ def procesar_archivo(file):
         raise ValueError("El archivo no contiene las hojas 'Cartera' o 'Cartera Escuelas'.")
 
     # Leer y combinar los datos de las hojas deseadas
-    df_list = [pd.read_excel(xls, sheet_name=hoja) for hoja in hojas_presentes]
+    df_list = [pd.read_excel(xls, sheet_name=hoja, dtype=str) for hoja in hojas_presentes]
     df = pd.concat(df_list, ignore_index=True)
 
     # Normalizar nombres de columnas (eliminar espacios extra, convertir a minúsculas)
     df.columns = df.columns.str.strip().str.lower()
 
     # Definir columnas a extraer (ajustar nombres en minúsculas)
-    columnas_deseadas = ["identificación", "factura", "saldo factura", "mes de cobro"]
+    columnas_deseadas = ["identificación", "factura", "proyecto", "saldo factura", "mes de cobro"]
 
     # Filtrar solo columnas que existen en el archivo
     columnas_presentes = [col for col in columnas_deseadas if col in df.columns]
@@ -33,11 +33,18 @@ def procesar_archivo(file):
 
     df_filtrado = df[columnas_presentes]
 
+    # Reemplazar valores vacíos o nulos con "NA"
+    df_filtrado.fillna("NA", inplace=True)
+
+    # Eliminar guiones en la columna "Factura"
+    if "factura" in df_filtrado.columns:
+        df_filtrado["factura"] = df_filtrado["factura"].str.replace("-", "", regex=True)
+
     # Convertir "Mes de Cobro" en mes (numérico) y año
     if "mes de cobro" in df_filtrado.columns:
         df_filtrado["mes de cobro"] = df_filtrado["mes de cobro"].astype(str)  # Asegurar que es texto
         df_filtrado[["mes", "año"]] = df_filtrado["mes de cobro"].str.split(" ", expand=True)
-        
+
         # Diccionario de meses para conversión a número
         meses_dict = {
             "enero": 1, "febrero": 2, "marzo": 3, "abril": 4, "mayo": 5, "junio": 6,
@@ -65,7 +72,7 @@ def generar_csv(df):
 st.set_page_config(page_title="Filtro de Columnas", page_icon="📂", layout="centered")
 st.title("📂 Filtro de Columnas en Excel")
 
-st.markdown("Sube un archivo Excel, extrae columnas específicas de las hojas 'Cartera' y 'Cartera Escuelas', divide 'Mes de Cobro' en mes y año, y descarga el CSV resultante.")
+st.markdown("Sube un archivo Excel, extrae columnas específicas de las hojas 'Cartera' y 'Cartera Escuelas', divide 'Mes de Cobro' en mes y año, asigna 'NA' a valores vacíos y elimina guiones de 'Factura'.")
 
 archivo = st.file_uploader("Cargar archivo Excel", type=["xlsx"])
 
