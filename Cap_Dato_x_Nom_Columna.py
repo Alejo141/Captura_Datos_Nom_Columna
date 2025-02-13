@@ -4,8 +4,20 @@ from io import BytesIO
 
 def procesar_archivo(file):
     df = pd.read_excel(file)
+    
+    # Normalizar nombres de columnas (eliminar espacios extra, convertir a minúsculas)
+    df.columns = df.columns.str.strip().str.lower()
+    
+    # Definir columnas que queremos extraer (también normalizadas)
     columnas_deseadas = ["Identificación", "Factura", "PROYECTO", "Saldo Factura", "Mes de Cobro"]  # Modifica según necesidad
-    df_filtrado = df[columnas_deseadas]
+    
+    # Filtrar solo columnas que existen en el archivo
+    columnas_presentes = [col for col in columnas_deseadas if col in df.columns]
+    
+    if not columnas_presentes:
+        raise ValueError("Ninguna de las columnas esperadas está en el archivo.")
+
+    df_filtrado = df[columnas_presentes]
     return df_filtrado
 
 def generar_csv(df):
